@@ -17,7 +17,7 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
-    private Integer productId;
+    private Long id;
 
     @Column(name = "name",nullable = false,length = 250)
     private String name;
@@ -32,20 +32,20 @@ public class Product {
     private Integer popularity;
 
     @Column(name = "image_url",length = 500)
-    private String image_url;
+    private String imageUrl;
 
     @Column(name = "created_at",nullable = false)
     @ColumnDefault("CURRENT_TIMESTAMP")
-    private Instant created_at;
+    private Instant createdAt;
 
     @Column(name = "created_by",nullable = false,length = 20)
-    private String created_by;
+    private String createdBy;
 
     @ColumnDefault("NULL")
     @Column(name = "updated_at")
-    private  Instant updated_at;
+    private  Instant updatedAt;
 
     @ColumnDefault("NULL")
     @Column(name = "updated_by",length = 20)
-    private String updated_by;
+    private String updatedBy;
 }
