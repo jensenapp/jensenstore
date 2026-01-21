@@ -1,14 +1,18 @@
 package com.eazybytes.jensenstore.controller;
 
+import com.eazybytes.jensenstore.dto.ErrorResponseDto;
 import com.eazybytes.jensenstore.dto.ProductDto;
 import com.eazybytes.jensenstore.service.IProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.WebRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -22,5 +26,14 @@ public class ProductController {
     public ResponseEntity<List<ProductDto>> getProducts() {
         List<ProductDto> products = iProductService.getProducts();
         return ResponseEntity.ok(products);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDto> handleGlobalException(Exception exception,
+                                                                  WebRequest webRequest) {
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false), HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(), LocalDateTime.now());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

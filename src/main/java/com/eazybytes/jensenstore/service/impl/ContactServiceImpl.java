@@ -9,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -19,17 +20,10 @@ public class ContactServiceImpl implements IContactService {
 
     @Override
     public boolean saveContact(ContactRequestDto contactRequestDto) {
-
-        try {
         Contact contact = mapToContact(contactRequestDto);
-        contact.setCreatedAt(Instant.now());
-        contact.setCreatedBy(contactRequestDto.getName());
-            contactRepository.save(contact);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-           return false;
-        }
+        contactRepository.save(contact);
+        return true;
+//        throw new RuntimeException("Oops, something bad happened");
     }
 
     private Contact mapToContact(ContactRequestDto contactRequestDto){

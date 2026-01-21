@@ -24,6 +24,7 @@ private final ProductRepository productRepository;
                 .map(this::transformToDTO)
                 .collect(Collectors.toList());
         return collect;
+//        throw new RuntimeException("Oops, something bad happened");
     }
 
     private ProductDto transformToDTO(Product product){
