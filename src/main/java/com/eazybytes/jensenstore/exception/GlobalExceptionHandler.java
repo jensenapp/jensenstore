@@ -20,11 +20,12 @@ import java.util.Set;
 
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, String>> handleConstraintViolationException(ConstraintViolationException exception) {
-
+        log.error("An exception occured due to :{}",exception.getMessage());
         Map<String, String> errors = new HashMap<>();
 
         // 取得所有的驗證錯誤
@@ -42,6 +43,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String,String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException methodArgumentNotValidException){
+        log.error("An exception occured due to :{}",methodArgumentNotValidException.getMessage());
+
         Map<String,String> errors =new HashMap<>();
         List<FieldError> fieldErrorList = methodArgumentNotValidException.getBindingResult().getFieldErrors();
         fieldErrorList.forEach(fieldError -> errors.put(fieldError.getField(),fieldError.getDefaultMessage()));
@@ -52,6 +55,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleGlobalException(
             Exception exception,
             WebRequest webRequest) {
+
+        log.error("An exception occured due to :{}",exception.getMessage());
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(
                 webRequest.getDescription(false),
