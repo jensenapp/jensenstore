@@ -4,5 +4,9 @@ import com.eazybytes.jensenstore.entity.Customer;
 import com.eazybytes.jensenstore.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface CustomerRepository extends JpaRepository<Customer,Integer> {
+
+    Optional<Customer> findByEmailOrMobileNumber(String email,String mobileNumber);
 }
