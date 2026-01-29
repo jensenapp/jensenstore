@@ -62,31 +62,14 @@ public class EazyStoreSecurityConfig {
         return source;
     }
 
-    @Bean
-    public UserDetailsService userDetailService() {
-        var user1 = User.builder()
-                .username("madan")
-                .password(passwordEncoder().encode("madan"))
-                .roles("USER")
-                .build();
 
-        var user2 = User.builder()
-                .username("admin")
-                .password(passwordEncoder().encode("admin"))
-                .roles("USER", "ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(user1, user2);
-    }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
+    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
 
         // 建立 DaoAuthenticationProvider
         var daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
 
         // 建立 ProviderManager

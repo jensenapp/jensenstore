@@ -4,9 +4,12 @@ import com.eazybytes.jensenstore.dto.LoginRequestDto;
 import com.eazybytes.jensenstore.dto.LoginResponseDto;
 import com.eazybytes.jensenstore.dto.RegisterRequestDto;
 import com.eazybytes.jensenstore.dto.UserDto;
+import com.eazybytes.jensenstore.entity.Customer;
+import com.eazybytes.jensenstore.repository.CustomerRepository;
 import com.eazybytes.jensenstore.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,7 +37,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
 
-    private final InMemoryUserDetailsManager inMemoryUserDetailsManager;
+    private final CustomerRepository customerRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -42,21 +45,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@Valid @RequestBody RegisterRequestDto registerRequestDto) {
 
-        // 建立 Spring Security User 物件
-        // 使用 Email 作為登入帳號
-        // 密碼需加密
-        // 權限預設為 USER
-        inMemoryUserDetailsManager.createUser(
-                new User(
-                        registerRequestDto.getEmail(),
-                        passwordEncoder.encode(registerRequestDto.getPassword()),
-                        List.of(new SimpleGrantedAuthority("USER"))
-                )
-        );
+        Customer customer = new Customer();
+        BeanUtils.copyProperties(registerRequestDto,customer);
+        customer.setPasswordHash(registerRequestDto.getPassword());
+        customerRepository.save(customer);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body("Registration successful");
+       return new ResponseEntity<>("Registration successful",HttpStatus.CREATED);
     }
 
 
