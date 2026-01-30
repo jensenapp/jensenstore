@@ -98,8 +98,9 @@ public class AuthController {
 
             var userDto = new UserDto();
 
-            var loggedInUser = (User) authentication.getPrincipal(); // 取得登入者詳細資訊
-            userDto.setName(loggedInUser.getUsername()); // 僅設定名稱，不含敏感資訊
+            var loggedInUser = (Customer) authentication.getPrincipal(); // 取得登入者詳細資訊
+
+            BeanUtils.copyProperties(loggedInUser,userDto);
 
             String jwtToken = jwtUtil.generateJwtToken(authentication);
 

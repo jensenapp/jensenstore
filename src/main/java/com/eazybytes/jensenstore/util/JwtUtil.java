@@ -1,6 +1,7 @@
 package com.eazybytes.jensenstore.util;
 
 import com.eazybytes.jensenstore.constants.ApplicationConstants;
+import com.eazybytes.jensenstore.entity.Customer;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +35,15 @@ public class JwtUtil {
         );
 
         // 3. 從 Authentication 中提取使用者資訊
-        User fetchedUser = (User) authentication.getPrincipal();
+        Customer fetchedUser = (Customer) authentication.getPrincipal();
 
         // 4. 建立 JWT Token
         jwt = Jwts.builder()
                 .issuer("Eazy Store")                          // 發行者
                 .subject("JWT Token")                          // 主旨
-                .claim("username", fetchedUser.getUsername())  // 自訂聲明
+                .claim("username", fetchedUser.getName())  // 自訂聲明
+                .claim("email",fetchedUser.getEmail())
+                .claim("mobileNumber",fetchedUser.getMobileNumber())
                 .issuedAt(new Date())                          // 發行時間
                 .expiration(new Date(new Date().getTime() + 60 * 60 * 1000))  // 過期時間：60分鐘
                 .signWith(secretKey)                           // 使用密鑰簽署
