@@ -1,11 +1,9 @@
 package com.eazybytes.jensenstore.controller;
 
-import com.eazybytes.jensenstore.dto.LoginRequestDto;
-import com.eazybytes.jensenstore.dto.LoginResponseDto;
-import com.eazybytes.jensenstore.dto.RegisterRequestDto;
-import com.eazybytes.jensenstore.dto.UserDto;
+import com.eazybytes.jensenstore.dto.*;
 import com.eazybytes.jensenstore.entity.BaseEntity;
 import com.eazybytes.jensenstore.entity.Customer;
+import com.eazybytes.jensenstore.entity.Role;
 import com.eazybytes.jensenstore.repository.CustomerRepository;
 import com.eazybytes.jensenstore.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -20,6 +18,7 @@ import org.springframework.security.authentication.password.CompromisedPasswordC
 import org.springframework.security.authentication.password.CompromisedPasswordDecision;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,10 +28,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/auth")
@@ -78,6 +75,10 @@ public class AuthController {
         Customer customer = new Customer();
         BeanUtils.copyProperties(registerRequestDto,customer);
         customer.setPasswordHash(passwordEncoder.encode(registerRequestDto.getPassword()));
+
+        Role role = new Role();
+        role.setName("ROLE_USER");
+        customer.setRoles(Set.of(role));
         customerRepository.save(customer);
 
        return new ResponseEntity<>("Registration successful",HttpStatus.CREATED);
@@ -96,11 +97,26 @@ public class AuthController {
                     )
             );
 
-            var userDto = new UserDto();
-
             var loggedInUser = (Customer) authentication.getPrincipal(); // 取得登入者詳細資訊
 
+            UserDto userDto = new UserDto();
+
+
+
+            if (loggedInUser.getAddress()!=null) {
+                AddressDto addressDto = new AddressDto();
+                BeanUtils.copyProperties(loggedInUser.getAddress(),addressDto);
+                userDto.setAddress(addressDto);
+            }
+
             BeanUtils.copyProperties(loggedInUser,userDto);
+
+            // 從 authentication 物件中取出 authorities 並轉為逗號分隔字串 (例如: "ROLE_USER,ROLE_ADMIN")
+           userDto.setRoles(authentication.getAuthorities()
+                   .stream()
+                   .map(GrantedAuthority::getAuthority)
+                   .collect(Collectors.joining(",")));
+
 
             String jwtToken = jwtUtil.generateJwtToken(authentication);
 

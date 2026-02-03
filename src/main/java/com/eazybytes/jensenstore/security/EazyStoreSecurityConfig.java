@@ -21,6 +21,8 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -40,12 +42,18 @@ public class EazyStoreSecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-       return http.csrf(csrfConfig->csrfConfig.disable())
+       return http.csrf(csrfConfig -> csrfConfig
+                       // 1. 告訴 Spring Security 使用 Cookie 儲存 Token，並允許前端 JS 讀取 (HttpOnly=false)
+                       .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                       // 2. 讓 Token 可作為 Request Attribute 使用 (確保過濾器鏈能正確處理)
+                       .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+               )
                .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
                .authorizeHttpRequests((requests) ->
                        {
                         publicPaths.forEach(path->requests.requestMatchers(path).permitAll());
-                        requests.anyRequest().authenticated();
+                        requests.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
+                        requests.anyRequest().hasAnyRole("USER","ADMIN");
                        }
                        )
                         .addFilterBefore(new JWTTokenValidatorFilter(publicPaths), BasicAuthenticationFilter.class)

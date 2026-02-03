@@ -7,12 +7,14 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -44,6 +46,9 @@ public class JwtUtil {
                 .claim("username", fetchedUser.getName())  // 自訂聲明
                 .claim("email",fetchedUser.getEmail())
                 .claim("mobileNumber",fetchedUser.getMobileNumber())
+                .claim("roles", authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.joining(",")))
                 .issuedAt(new Date())                          // 發行時間
                 .expiration(new Date(new Date().getTime() + 60 * 60 * 1000))  // 過期時間：60分鐘
                 .signWith(secretKey)                           // 使用密鑰簽署
