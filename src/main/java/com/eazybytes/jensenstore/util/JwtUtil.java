@@ -50,7 +50,7 @@ public class JwtUtil {
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.joining(",")))
                 .issuedAt(new Date())                          // 發行時間
-                .expiration(new Date(new Date().getTime() + 60 * 60 * 1000))  // 過期時間：60分鐘
+                .expiration(new Date(new Date().getTime() + 60 * 60*1000))  // 過期時間：60分鐘
                 .signWith(secretKey)                           // 使用密鑰簽署
                 .compact();                                    // 生成最終 Token
 

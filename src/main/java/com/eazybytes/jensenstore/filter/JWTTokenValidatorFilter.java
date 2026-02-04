@@ -2,6 +2,7 @@ package com.eazybytes.jensenstore.filter;
 
 import com.eazybytes.jensenstore.constants.ApplicationConstants;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
@@ -27,9 +28,9 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class JWTTokenValidatorFilter extends OncePerRequestFilter {
-
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final List<String> publicPaths;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -49,27 +50,25 @@ public class JWTTokenValidatorFilter extends OncePerRequestFilter {
                         Claims claims = Jwts.parser().verifyWith(secretKey)
                                 .build().parseSignedClaims(jwt).getPayload();
                         String username = String.valueOf(claims.get("email"));
-
-                        String roles=String.valueOf(claims.get("roles"));
-
-                        List<GrantedAuthority> grantedAuthorities =
-                                AuthorityUtils.commaSeparatedStringToAuthorityList(roles);
-
+                        String roles = String.valueOf(claims.get("roles"));
                         Authentication authentication = new UsernamePasswordAuthenticationToken(username,
-                                null, grantedAuthorities);
-
+                                null, AuthorityUtils.commaSeparatedStringToAuthorityList(roles));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
 
-            } catch (Exception exception) {
+            }catch (ExpiredJwtException exception) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token Expired");
+                return;
+            }
+            catch (Exception exception) {
                 throw new BadCredentialsException("Invalid Token received!");
             }
         }
         filterChain.doFilter(request, response);
 
     }
-
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request)
@@ -79,3 +78,4 @@ public class JWTTokenValidatorFilter extends OncePerRequestFilter {
                 pathMatcher.match(publicPath, path));
     }
 }
+
