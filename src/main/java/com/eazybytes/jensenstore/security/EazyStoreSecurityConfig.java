@@ -52,6 +52,13 @@ public class EazyStoreSecurityConfig {
                .authorizeHttpRequests((requests) ->
                        {
                         publicPaths.forEach(path->requests.requestMatchers(path).permitAll());
+                           //保護 Actuator 端點：僅限維運工程師
+                           requests.requestMatchers("/eazystore/actuator/**").hasRole("OPS_ENG");
+
+                           //保護 Swagger UI 端點：僅限開發或測試工程師
+                           requests.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                                   .hasAnyRole("DEV_ENG", "QA_ENG");
+
                         requests.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
                         requests.anyRequest().hasAnyRole("USER","ADMIN");
                        }
