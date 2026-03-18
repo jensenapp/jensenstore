@@ -42,13 +42,8 @@ public class EazyStoreSecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-       return http.csrf(csrfConfig -> csrfConfig
-                       .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/auth/register")
-                       // 1. 告訴 Spring Security 使用 Cookie 儲存 Token，並允許前端 JS 讀取 (HttpOnly=false)
-                       .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                       // 2. 讓 Token 可作為 Request Attribute 使用 (確保過濾器鏈能正確處理)
-                       .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-               )
+       return http.csrf(csrfConfig -> csrfConfig.disable())
+
                .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
                .authorizeHttpRequests((requests) ->
                        {
@@ -73,7 +68,12 @@ public class EazyStoreSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        config.setAllowedOrigins(
+                Arrays.asList(
+                        "http://localhost:5173",
+                        "https://jensen-store.online",
+                        "https://www.jensen-store.online"
+                ));
         config.setAllowedMethods(Collections.singletonList("*"));
         config.setAllowedHeaders(Collections.singletonList("*"));
         config.setAllowCredentials(true);
