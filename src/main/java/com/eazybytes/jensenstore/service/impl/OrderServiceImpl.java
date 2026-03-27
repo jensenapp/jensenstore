@@ -12,6 +12,7 @@ import com.eazybytes.jensenstore.exception.ResourceNotFoundException;
 import com.eazybytes.jensenstore.repository.OrderRepository;
 import com.eazybytes.jensenstore.repository.ProductRepository;
 import com.eazybytes.jensenstore.service.IOrderService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.Authentication;
@@ -31,16 +32,28 @@ public class OrderServiceImpl implements IOrderService {
 
 
     @Override
+    @Transactional
     public void createOrder(OrderRequestDto orderRequest) {
+
         Customer customer = profileService.getAuthenticatedCustomer();
         Order order = new Order();
         order.setCustomer(customer);
-        BeanUtils.copyProperties(orderRequest, order);
+        order.setTotalPrice(orderRequest.totalPrice());
+        order.setPaymentId(orderRequest.paymentId());
+        order.setPaymentStatus(orderRequest.paymentStatus());
         order.setOrderStatus(ApplicationConstants.ORDER_STATUS_CREATED);
 
         List<OrderItem> orderItems = orderRequest.items().stream().map(item -> {
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
+
+            // 1. 直接呼叫 Repository 扣庫存，取得受影響的資料筆數
+            int updatedRows = productRepository.decreaseStock(item.productId(), item.quantity());
+
+            // 2. 如果回傳 0，代表庫存不足，直接中斷交易 (Rollback)
+            if (updatedRows == 0) {
+                throw new RuntimeException("商品庫存不足或已被搶購一空！(ProductID: " + item.productId() + ")");
+            }
 
             Product product = productRepository
                     .findById(item.productId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -48,6 +61,7 @@ public class OrderServiceImpl implements IOrderService {
                             "ProductID",
                             item.productId().toString()
                     ));
+
             orderItem.setProduct(product);
             orderItem.setPrice(item.price());
             orderItem.setQuantity(item.quantity());
